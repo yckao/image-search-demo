@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "image-search-demo"
 version = "0.1.0"
+packages = [ {include = "src"}]
 description = ""
 authors = ["YC KAO <yckaokarl@gmail.com>"]
 license = "GPLv3"
