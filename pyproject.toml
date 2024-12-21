@@ -20,8 +20,11 @@ fastapi = "^0.115.6"
 pgvector = "^0.3.6"
 pydantic = "^2.10.4"
 loguru = "^0.7.3"
+pydantic-settings = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+ipywidgets = "^8.1.5"
 
 [build-system]
 requires = ["poetry-core"]
