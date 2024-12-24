@@ -1,0 +1,27 @@
+name: image-search-demo
+
+services:
+  database:
+    image: pgvector/pgvector:pg17
+    env_file:
+      - .env
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  minio:
+    build:
+      context: minio
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+      - 127.0.0.1:9001:9001
+    volumes:
+      - minio-data:/data
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
+  minio-data:
