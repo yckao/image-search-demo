@@ -44,10 +44,16 @@ docker compose -f hack/compose/docker-compose.yaml --profile dev up -d
 4. [Opitional] Upload assets
 
 ```bash
-docker compose -f hack/compose/docker-compose.yaml run dev-assets
+docker compose -f hack/compose/docker-compose.yaml run --rm dev-assets
 ```
 
 5. Open the API documentation at http://localhost:8000/docs
+
+### Clean up
+
+```bash
+docker compose -f hack/compose/docker-compose.yaml --profile dev down -v
+```
 
 ## Future Work
 
