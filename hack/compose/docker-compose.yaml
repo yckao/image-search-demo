@@ -1,5 +1,33 @@
 name: image-search-demo
 
+x-dev-build: &dev-build
+  build:
+    context: ../../
+    dockerfile: Dockerfile
+    target: dev
+
+x-dev-environment: &dev-environment
+  env_file:
+    - .env
+  environment:
+    - POSTGRES_HOST=database
+    - S3_ENDPOINT_URL=http://minio:9000
+
+x-common-build: &common-build
+  build:
+    context: ../../
+    dockerfile: Dockerfile
+
+x-dev-mounts: &dev-mounts
+  volumes:
+    - ../../pyproject.toml:/app/pyproject.toml
+    - ../../poetry.lock:/app/poetry.lock
+    - ../../README.md:/app/README.md
+    - ../../src:/app/src
+    - ../../alembic.ini:/app/alembic.ini
+    - ../../alembic:/app/alembic
+    - models:/app/${MODEL_PATH}
+
 services:
   database:
     image: pgvector/pgvector:pg17
@@ -9,19 +37,78 @@ services:
       - 127.0.0.1:5432:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["dev", "dev-assets"]
 
   minio:
     build:
       context: minio
       dockerfile: Dockerfile
     ports:
-      - 9000:9000
+      - 127.0.0.1:9000:9000
       - 127.0.0.1:9001:9001
     volumes:
       - minio-data:/data
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["dev", "dev-assets"]
+
+  download-pretrained:
+    <<: [*dev-build, *dev-environment]
+    command: ["python", "hack/download-pretrained/download.py"]
+    env_file:
+      - .env
+    volumes:
+      - models:/app/${MODEL_PATH}
+      - ../../hack/download-pretrained:/app/hack/download-pretrained
+    profiles: ["dev", "dev-assets"]
+
+  migration:
+    <<: [*dev-build, *dev-environment, *dev-mounts]
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      database:
+        condition: service_healthy
+    profiles: ["dev", "dev-assets"]
+
+  dev:
+    <<: [*dev-build, *dev-environment, *dev-mounts]
+    ports:
+      - 8000:8000
+    depends_on:
+      download-pretrained:
+        condition: service_completed_successfully
+      migration:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/8000' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["dev", "dev-assets"]
+
+  dev-assets:
+    build:
+      context: ../../assets
+      dockerfile: Dockerfile
+    environment:
+      - HOST=dev
+    profiles: ["dev-assets"]
 
 volumes:
+  models:
   pgdata:
   minio-data:
