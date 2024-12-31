@@ -24,7 +24,8 @@ The service consists of several components:
 
 1. Clone the repository:
 
-> [!IMPORTANT]: Pease ensure git-lfs is installed otherwise the assets will not be downloaded.
+> [!IMPORTANT]
+> Pease ensure git-lfs is installed otherwise the assets will not be downloaded.
 > For mac users, you can install it by running `brew install git-lfs && git lfs install`
 
 ```bash
