@@ -1,3 +1,4 @@
+# pylint: disable=all
 import asyncio
 from logging.config import fileConfig
 
@@ -25,6 +26,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 import src.image.models
 from src.database import Base
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -60,6 +62,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def render_item(type_, obj, autogen_context):
     """Apply custom rendering for selected items."""
 
@@ -69,8 +72,11 @@ def render_item(type_, obj, autogen_context):
 
     return False
 
+
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, render_item=render_item)
+    context.configure(
+        connection=connection, target_metadata=target_metadata, render_item=render_item
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -83,7 +89,8 @@ async def run_async_migrations() -> None:
     """
 
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}) | {"sqlalchemy.url": settings.postgres_url},
+        config.get_section(config.config_ini_section, {})
+        | {"sqlalchemy.url": settings.postgres_url},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
@@ -93,10 +100,12 @@ async def run_async_migrations() -> None:
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
 
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()
